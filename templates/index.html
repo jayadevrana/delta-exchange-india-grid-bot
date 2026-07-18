@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Delta India Local Grid Bot</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Local Delta India Algo Desk</p>
+          <h1>Grid bot control panel</h1>
+          <p class="subtle">
+            This build uses fixed account credentials and fixed strategy defaults in code.
+            The UI is only for start, stop, monitoring, and OTP display.
+          </p>
+        </div>
+        <div class="badge">Runs locally on your machine</div>
+      </section>
+
+      <section class="grid">
+        <form id="bot-form" class="card form-card">
+          <h2>Strategy inputs</h2>
+          <div class="field-grid">
+            <label>
+              <span>Product symbol</span>
+              <input name="product_symbol" type="text" value="{{ settings.product_symbol }}" required>
+            </label>
+            <label>
+              <span>Levels each side</span>
+              <input name="levels_count" type="number" value="{{ settings.levels_count }}" min="1" required>
+            </label>
+            <label>
+              <span>Starting qty</span>
+              <input name="qty_start" type="number" value="{{ settings.qty_start }}" min="1" required>
+            </label>
+            <label>
+              <span>Qty step</span>
+              <input name="qty_step" type="number" value="{{ settings.qty_step }}" min="0" required>
+            </label>
+            <label>
+              <span>Grid gap</span>
+              <input name="price_gap" type="number" value="{{ settings.price_gap }}" step="0.01" min="0.01" required>
+            </label>
+            <label>
+              <span>Target gap</span>
+              <input name="target_gap" type="number" value="{{ settings.target_gap }}" step="0.01" min="0.01" required>
+            </label>
+            <label>
+              <span>Max MTM loss</span>
+              <input name="max_mtm_loss" type="number" value="{{ settings.max_mtm_loss }}" step="0.01" min="0.01" required>
+            </label>
+            <label>
+              <span>Max MTM profit</span>
+              <input name="max_mtm_profit" type="number" value="{{ settings.max_mtm_profit }}" step="0.01" min="0.01" required>
+            </label>
+            <label>
+              <span>Poll interval</span>
+              <input name="poll_interval" type="number" value="{{ settings.poll_interval }}" step="0.5" min="1" required>
+            </label>
+          </div>
+
+          <div class="inline-actions">
+            <button type="button" id="otp-button" class="secondary">Generate 6 digit OTP</button>
+            <div id="otp-output" class="otp-output">OTP not generated</div>
+          </div>
+
+          <div class="warning-box">
+            Entry grid example:
+            current price 60000 -> sell orders at 60100, 60200... with qty 1, 2...
+            and buy orders at 59900, 59800... with qty 1, 2...
+            The bot monitors MTM continuously and exits if MTM reaches either the configured loss or profit threshold.
+          </div>
+
+          <div class="inline-actions action-row">
+            <button type="button" id="start-button" class="primary">Start Strategy</button>
+            <button type="button" id="stop-button" class="secondary">Stop</button>
+            <button type="button" id="square-off-button" class="danger">Emergency Square Off</button>
+          </div>
+        </form>
+
+        <section class="card status-card">
+          <h2>Live status</h2>
+          <div class="stats">
+            <article>
+              <span class="stat-label">State</span>
+              <strong id="state">{{ "Running" if status.running else "Stopped" }}</strong>
+            </article>
+            <article>
+              <span class="stat-label">Symbol</span>
+              <strong id="product_symbol">{{ status.product_symbol or "-" }}</strong>
+            </article>
+            <article>
+              <span class="stat-label">Product ID</span>
+              <strong id="product_id">{{ status.product_id or "-" }}</strong>
+            </article>
+            <article>
+              <span class="stat-label">Current price</span>
+              <strong id="current_price">{{ status.current_price }}</strong>
+            </article>
+            <article>
+              <span class="stat-label">Approx MTM</span>
+              <strong id="approx_mtm">{{ status.approx_mtm }}</strong>
+            </article>
+            <article>
+              <span class="stat-label">Position size</span>
+              <strong id="position_size">{{ status.position_size }}</strong>
+            </article>
+            <article>
+              <span class="stat-label">Entry price</span>
+              <strong id="position_entry_price">{{ status.position_entry_price }}</strong>
+            </article>
+            <article>
+              <span class="stat-label">Grid orders sent</span>
+              <strong id="grid_orders_sent">{{ status.grid_orders_sent }}</strong>
+            </article>
+            <article>
+              <span class="stat-label">Target orders sent</span>
+              <strong id="target_orders_sent">{{ status.target_orders_sent }}</strong>
+            </article>
+            <article>
+              <span class="stat-label">Last action</span>
+              <strong id="last_action">{{ status.last_action }}</strong>
+            </article>
+          </div>
+
+          <div class="callout">
+            <strong>Risk note</strong>
+            <p id="public_note">{{ status.public_note }}</p>
+          </div>
+
+          <div class="callout error-box">
+            <strong>Last error</strong>
+            <p id="last_error">{{ status.last_error or "None" }}</p>
+          </div>
+        </section>
+      </section>
+
+      <section class="card log-card">
+        <div class="log-header">
+          <h2>Bot log</h2>
+          <button type="button" id="refresh-button" class="secondary">Refresh now</button>
+        </div>
+        <pre id="log-output">{% if status.logs %}{{ status.logs | join('\n') }}{% else %}No logs yet.{% endif %}</pre>
+      </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+</html>
